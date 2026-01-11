@@ -1,45 +1,52 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <title>VISA + SCIPY Web</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 18px; }
-    button { cursor: pointer; }
-    table { border-collapse: collapse; width: 100%; margin-top: 14px; }
-    th, td { border: 1px solid #ccc; padding: 8px; vertical-align: top; }
-    th { background: #f6f6f6; }
-    .ok { color: #0a7a0a; font-weight: 600; }
-    .no { color: #a00000; font-weight: 600; }
-    .cmd-grid { display: grid; grid-template-columns: 260px 220px 220px 1fr; gap: 8px; align-items: center; }
-    .cmd-row { padding: 6px 0; border-bottom: 1px dashed #ddd; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-    input, select { width: 100%; padding: 6px; }
-    .small { font-size: 12px; color: #666; }
-  </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SCPI Instrument Control</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <h2>VISA device discovery + SCIPY Excel commands</h2>
+  <div class="container">
+    <header class="topbar">
+      <h1>SCPI Instrument Control</h1>
+      <button id="scanBtn" class="primary">Discover</button>
+      <span id="status" class="status"></span>
+    </header>
 
-  <button id="discoverBtn">Discover</button>
-  <span id="status" class="small"></span>
+    <section class="card">
+      <h2>Discovered devices</h2>
+      <div class="tableWrap">
+        <table id="instTable">
+          <thead>
+            <tr>
+              <th style="width: 34%;">Device</th>
+              <th style="width: 22%;">Alias</th>
+              <th>Commands</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      
+    </section>
 
-  <div id="tableWrap"></div>
-  <hr style="margin:18px 0;"/>
 
-  <h3>Command history</h3>
-  <div style="display:flex; gap:10px; margin-bottom:10px;">
-    <button id="copyHistoryBtn">Copy as Python</button>
-    <button id="clearHistoryBtn">Clear</button>
-    <span id="historyStatus" class="small"></span>
+    <section class="card">
+      <div class="historyHead">
+        <h2 style="margin:0;">History</h2>
+        <div class="historyBtns">
+          <input id="delayInput" class="delayInput" placeholder="seconds…" inputmode="decimal" />
+          <button id="addDelayBtn" class="secondary">Add delay</button>
+          <button id="clearHistoryBtn" class="secondary">Clear history</button>
+          <button id="copyHistoryBtn" class="secondary">Copy history</button>
+        </div>
+      </div>
+      <textarea id="historyBox" class="historyBox" readonly></textarea>
+    </section>
+
   </div>
 
-  <textarea id="historyBox" style="width:100%; height:220px;" class="mono" readonly></textarea>
-
-  <script>
-    // Preload server-side devices (if any)
-    window.__DEVICES__ = {{ devices|tojson }};
-  </script>
-  <script src="{{ url_for('static', filename='app.js') }}"></script>
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 </html>
