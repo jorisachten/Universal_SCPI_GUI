@@ -1,4 +1,4 @@
-# SCPI Excel Descriptor – Human Guide
+# SCPI Excel Descriptor
 
 This repository uses an **Excel-based SCPI descriptor** to define how laboratory instruments are controlled from the Flask web UI and from Python automation scripts.
 
