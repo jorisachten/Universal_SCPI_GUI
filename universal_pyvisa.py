@@ -41,7 +41,7 @@ class Instrument:
                 inst.timeout = 100  # ms
                 
             else:
-                print("ERROR: UNKNOWN DEVICE KIND:",self.alias,':',command)
+                print("ERROR: UNKNOWN DEVICE KIND")
                 return ''
 
             
@@ -53,7 +53,6 @@ class Instrument:
                     response = ''      # no response is OK
                 else:
                     raise
-            print(self.alias,':',command.replace("\r", "").replace("\n", ""),'-->',response.replace("\r", "").replace("\n", ""))
             return response
     
                 
@@ -81,7 +80,6 @@ class Instrument:
                 if e.error_code == pyvisa.constants.StatusCode.error_timeout:
                     return
                 raise
-            print(self.alias,':',command.replace("\r", "").replace("\n", ""))
 
     def __str__(self):
         return (

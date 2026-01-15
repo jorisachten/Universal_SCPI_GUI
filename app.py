@@ -341,8 +341,23 @@ def api_run():
 
     try:
         if c.mode == "GET":
-            resp = mgr.query(alias, c.cmd)
-            return jsonify({"ok": True, "mode": "GET", "cmd": c.cmd, "response": resp})
+            cmd_to_send = c.cmd.strip()
+            # If placeholders exist, require values and substitute
+            if param_defs:
+                for d in param_defs:
+                    if d.name not in values or str(values.get(d.name, "")).strip() == "":
+                        return jsonify({"ok": False, "error": f"Missing value for {d.name}"}), 400
+                    v = str(values[d.name]).strip()
+                    if getattr(d, "kind", "free") == "free":
+                        v = _apply_format_spec(v, getattr(d, "format_spec", ""))
+                    cmd_to_send = re.sub(r"\{" + re.escape(d.name) + r"\}", v, cmd_to_send)
+
+                if re.search(r"\{[^}]+\}", cmd_to_send) and values:
+                    first_v = str(next(iter(values.values()))).strip()
+                    cmd_to_send = re.sub(r"\{[^}]+\}", first_v, cmd_to_send)
+
+            resp = mgr.query(alias, cmd_to_send)
+            return jsonify({"ok": True, "mode": "GET", "cmd": cmd_to_send, "response": resp})
 
         cmd_to_send = c.cmd.strip()
 

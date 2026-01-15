@@ -243,7 +243,7 @@ async function loadCommandsIntoCell(alias, model, cell) {
       let inputCell = document.createElement("div");
       inputCell.className = "cmdEmpty";
 
-      if (mode === "SET" && paramDefs.length > 0) {
+      if (paramDefs.length > 0) {
         const wrap = document.createElement("div");
         wrap.className = "paramWrap";
 
@@ -287,7 +287,13 @@ async function loadCommandsIntoCell(alias, model, cell) {
         out.textContent = "";
         try {
           if (mode === "GET") {
-            const r = await postJSON("/api/run", { alias, name });
+            let payload = { alias, name };
+            if (inputs.length > 0) {
+              const values = {};
+              inputs.forEach(x => values[x.name] = (x.el.value ?? "").trim());
+              payload.values = values;
+            }
+            const r = await postJSON("/api/run", payload);
             appendHistory(`setup.query('${escapePy(alias)}','${escapePy(r.cmd)}')`);
             const diag = makeDiagText(r.cmd, r.response, false);
             out.textContent = diag;
