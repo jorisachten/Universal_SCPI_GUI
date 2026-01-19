@@ -117,8 +117,6 @@ async function copyHistoryToClipboard() {
   document.body.removeChild(tmp);
 }
 
-
-
 function showImageModal(dataUrl) {
   const imgModal = document.getElementById("imgModal");
   const imgModalImg = document.getElementById("imgModalImg");
@@ -159,8 +157,6 @@ function makeDiagText(cmd, resp, okForSet=false) {
   return okForSet ? `${c}` : `${c} -->`;
 }
 
-
-
 function renderCustomOnly(cell, alias) {
   const table = document.createElement("div");
   table.className = "cmdTable";
@@ -174,43 +170,7 @@ function renderCustomOnly(cell, alias) {
   `;
   table.appendChild(header);
 
-  const row = document.createElement("div");
-  row.className = "cmdRow3";
-
-  const inp = document.createElement("input");
-  inp.className = "cmdInput";
-  inp.placeholder = "e.g. *IDN?  or  VSET1:12.3";
-
-  const btn = document.createElement("button");
-  btn.className = "cmdBtnAlt";
-  btn.textContent = "Custom CMD";
-
-  const out = document.createElement("div");
-  out.className = "cmdOut";
-
-  btn.addEventListener("click", async () => {
-    out.textContent = "";
-    try {
-      const cmd = (inp.value || "").trim();
-      const r = await postJSON("/api/custom", { alias, cmd });
-      if ((r.cmd || '').includes('?')) {
-        appendHistory(`setup.query('${escapePy(alias)}','${escapePy(r.cmd)}')`);
-      } else {
-        appendHistory(`setup.write('${escapePy(alias)}','${escapePy(r.cmd)}')`);
-      }
-      const diag = makeDiagText(r.cmd, r.response, true);
-      out.textContent = diag;
-      out.title = diag;
-    } catch (e) {
-      out.textContent = "Error: " + e.message;
-      out.title = out.textContent;
-    }
-  });
-
-  row.appendChild(inp);
-  row.appendChild(btn);
-  row.appendChild(out);
-  table.appendChild(row);
+  
 
   cell.innerHTML = "";
   cell.appendChild(table);
@@ -243,56 +203,8 @@ async function loadCommandsIntoCell(alias, model, cell) {
       const row = document.createElement("div");
       row.className = "cmdRow3";
 
-      const inp = document.createElement("input");
-      inp.className = "cmdInput";
-      inp.placeholder = "e.g. *IDN?  or  VSET1:12.3";
+      
 
-      const btn = document.createElement("button");
-      btn.className = "cmdBtnAlt";
-      btn.textContent = "Custom CMD";
-
-      const out = document.createElement("div");
-      out.className = "cmdOut";
-
-      btn.addEventListener("click", async () => {
-        out.textContent = "";
-        try {
-
-          if (c.is_image) {
-            const r = await postJSON("/api/screenshot", { alias, cmd: c.cmd });
-            ensureImageImports();
-            appendHistory("# --- screenshot ---");
-            appendHistory(`raw = setup.query_binary('${escapePy(alias)}','${escapePy(r.cmd)}')`);
-            appendHistory("if raw.startswith(b'#'):");
-            appendHistory("    n = int(raw[1:2])");
-            appendHistory("    size = int(raw[2:2+n])");
-            appendHistory("    raw = raw[2+n : 2+n+size]");
-            appendHistory("img = Image.open(BytesIO(raw))");
-            appendHistory("img");
-            const url = `data:${r.mime};base64,${r.b64}`;
-            showImageModal(url);
-            const diag = `${r.cmd} --> [image]`;
-            out.textContent = diag;
-            out.title = diag;
-            return;
-          }
-
-          const cmd = (inp.value || "").trim();
-          const r = await postJSON("/api/custom", { alias, cmd });
-          const diag = makeDiagText(r.cmd, r.response, true);
-            out.textContent = diag;
-      out.title = diag;
-            out.title = diag;
-        } catch (e) {
-          out.textContent = "Error: " + e.message;
-          out.title = out.textContent;
-        }
-      });
-
-      row.appendChild(inp);
-      row.appendChild(btn);
-      row.appendChild(out);
-      table.appendChild(row);
     }
 
     cmds.forEach(c => {
@@ -468,7 +380,6 @@ function renderInstruments(instruments) {
     if (!alias) {
       tdCmd.innerHTML = `<div class="small">Set an alias to show commands.</div>`;
     } else if (!hasDef) {
-      // No Excel Descriptor: still allow Custom CMD
       renderCustomOnly(tdCmd, alias);
     } else {
       loadCommandsIntoCell(alias, inst.model, tdCmd);

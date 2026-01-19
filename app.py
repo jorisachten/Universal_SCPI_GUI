@@ -442,30 +442,6 @@ def api_run():
         return jsonify({"ok": False, "error": f"{type(e).__name__}: {e}"}), 500
 
 
-@app.route("/api/custom", methods=["POST"])
-def api_custom():
-    data = request.get_json(force=True)
-    alias = (data.get("alias") or "").strip()
-    cmd = (data.get("cmd") or "").strip()
-
-    if not alias or not cmd:
-        return jsonify({"ok": False, "error": "Missing alias/cmd"}), 400
-
-    with _lock:
-        mgr = _get_mgr()
-
-    try:
-        # heuristic: if command contains '?' treat as query
-        if "?" in cmd:
-            resp = mgr.query(alias, cmd)
-            return jsonify({"ok": True, "cmd": cmd, "response": resp})
-        mgr.write(alias, cmd)
-        return jsonify({"ok": True, "cmd": cmd, "response": ""})
-    except Exception as e:
-        return jsonify({"ok": False, "error": f"{type(e).__name__}: {e}"}), 500
-
-
-
 @app.route("/api/screenshot", methods=["POST"])
 def api_screenshot():
     data = request.get_json(force=True)
