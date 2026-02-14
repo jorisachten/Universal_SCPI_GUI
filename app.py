@@ -236,9 +236,68 @@ def load_scpi_definitions(xlsx_path: str) -> Dict[str, List[ScpiCommand]]:
     return defs
 
 
+
+
+def _norm_model(s: Optional[str]) -> str:
+    """Normalize model strings for lookups (case/space-insensitive)."""
+    if s is None:
+        return ""
+    return re.sub(r"\s+", "", str(s)).strip().upper()
+
+
+def load_index_metadata(xlsx_path: str) -> Dict[str, Dict[str, Any]]:
+    """
+    Load optional metadata from an 'INDEX' sheet in the Excel file.
+
+    Expected columns (case-insensitive): Model, Type, Description, Brand, Interface, Tested, REMARK
+    Returns dict keyed by normalized Model.
+    """
+    xls = pd.ExcelFile(xlsx_path)
+    sheet = None
+    for s in xls.sheet_names:
+        if str(s).strip().upper() == "INDEX":
+            sheet = s
+            break
+    if sheet is None:
+        return {}
+
+    df = pd.read_excel(xls, sheet_name=sheet)
+
+    model_col = _find_col(df, ["Model"])
+    if not model_col:
+        return {}
+
+    # Optional columns
+    type_col = _find_col(df, ["Type"])
+    desc_col = _find_col(df, ["Description", "Desc"])
+    brand_col = _find_col(df, ["Brand", "Vendor"])
+    iface_col = _find_col(df, ["Interface"])
+    tested_col = _find_col(df, ["Tested"])
+    remark_col = _find_col(df, ["Remark", "REMARK", "Notes", "Note"])
+
+    meta: Dict[str, Dict[str, Any]] = {}
+    for _, row in df.iterrows():
+        model = "" if pd.isna(row[model_col]) else str(row[model_col]).strip()
+        if not model:
+            continue
+        k = _norm_model(model)
+        meta[k] = {
+            "index_model": model,
+            "index_type": "" if (not type_col or pd.isna(row[type_col])) else str(row[type_col]).strip(),
+            "index_description": "" if (not desc_col or pd.isna(row[desc_col])) else str(row[desc_col]).strip(),
+            "index_brand": "" if (not brand_col or pd.isna(row[brand_col])) else str(row[brand_col]).strip(),
+            "index_interface": "" if (not iface_col or pd.isna(row[iface_col])) else str(row[iface_col]).strip(),
+            "index_tested": "" if (not tested_col or pd.isna(row[tested_col])) else str(row[tested_col]).strip(),
+            "index_remark": "" if (not remark_col or pd.isna(row[remark_col])) else str(row[remark_col]).strip(),
+        }
+    return meta
+
+
 SCPI_DEFS: Dict[str, List[ScpiCommand]] = load_scpi_definitions(EXCEL_PATH)
 SCPI_MODELS = set(SCPI_DEFS.keys())
 
+
+INDEX_META: Dict[str, Dict[str, Any]] = load_index_metadata(EXCEL_PATH)
 
 def _get_mgr() -> upyvisa:
     global _mgr
@@ -248,15 +307,20 @@ def _get_mgr() -> upyvisa:
 
 
 def _instrument_to_dict(inst) -> Dict[str, Any]:
-    return {
+    model = inst.model
+    meta = INDEX_META.get(_norm_model(model))
+    out = {
         "visa_name": inst.visa_name,
         "dev_kind": str(inst.dev_kind),
         "vendor": inst.vendor,
-        "model": inst.model,
+        "model": model,
         "serial": inst.serial,
         "alias": inst.alias or "",
-        "has_scpi_def": (inst.model in SCPI_MODELS),
+        "has_scpi_def": (model in SCPI_MODELS),
     }
+    if meta:
+        out.update(meta)
+    return out
 
 
 def _format_set_command(cmd_template: str, value: str) -> str:

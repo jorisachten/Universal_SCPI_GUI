@@ -334,6 +334,8 @@ function renderInstruments(instruments) {
       <div class="devMain">
         <div class="devTop">${escapeHtml(inst.vendor)} <strong>${escapeHtml(inst.model)}</strong></div>
         <div class="devSub">Identifier: ${escapeHtml(inst.serial)}</div>
+        ${inst.index_type ? `<div class="devSub">Type: ${escapeHtml(inst.index_type)}</div>` : ""}
+        ${inst.index_description ? `<div class="devSub">Description: ${escapeHtml(inst.index_description)}</div>` : ""}
         <div class="devSub">VISA address: ${escapeHtml(inst.visa_name)}</div>
       </div>
       <div class="tagWrap">
